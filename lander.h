@@ -39,7 +39,7 @@
 #define max_time_per_turn    ((time_t)3)
 #define delta_t              ((double)0.1)
 #define initial_fuel_weight  ((double)1000.0)
-#define max_landing_velocity ((d ouble)-3.0)
+#define max_landing_velocity ((double)-3.0)
 #define nozzle_velocity      ((double)2000.0)
 #define hover_count_goal     ((int)50)
 
