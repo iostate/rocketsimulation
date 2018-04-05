@@ -4,13 +4,15 @@
 #include <iostream>
 #include <unistd.h>
 
-
 double total_mass;
 double ship_weight = 534.0;
 double force_one;
 double max_velocity = 110.0;
 double burn_rate;
 double v_nozz = 2000.0;
+double final_velocity = 0.0;
+
+/* Declare extern method for the assembly language function*/
 
 int main() {
     ship_state_type *rocket = new ship_state_type;
@@ -30,18 +32,25 @@ int main() {
 
     while (rocket->time < 500) {
 
-        while (rocket->time < 50) {
+        while (rocket->time < 2) {
             total_mass = ship_weight + rocket->fuel_weight;
             std::cout << "Total mass: " << total_mass << std::endl;
             force_one = total_mass * 110.0;
             burn_rate = force_one / v_nozz;
+            std::cout << "Burn Rate: " << burn_rate << std::endl;
             rocket->fuel_weight = (rocket->fuel_weight) - burn_rate * delta_t;
+            std::cout << "BURNED THIS AMOUNT OF FUEL: " << burn_rate * delta_t << std::endl;
             total_mass = ship_weight + rocket->fuel_weight;
-            rocket->acceleration = force_one / total_mass; /* in m/s^2*/
-            rocket->altitude = rocket->velocity * 0.1 + 0.5 * rocket->acceleration * 0.1;
+            rocket->acceleration = (force_one / total_mass) - 10.0; /* in m/s^2*/
+            std::cout << "Rocket acceleration: " << rocket->acceleration << std::endl;
+            rocket->altitude = rocket->velocity * 0.1 + 0.5 * rocket->acceleration * (0.1 * 0.1);
             std::cout << "Rocket altitude: " << rocket->altitude << std::endl;
-            rocket->velocity = rocket->velocity + rocket->acceleration * 0.1;
-            std::cout << "Rocket final velocity: " << rocket->velocity << std::endl;
+            /* Do final velocity */
+            final_velocity = rocket->velocity + rocket->acceleration * 0.1;
+            std::cout << "Rocket Final Velocity: " << final_velocity << std::endl;
+            /* Do the vi */
+            rocket->velocity = final_velocity;
+            std::cout << "Rocket Initial Velocity: " << rocket->velocity << std::endl;
             std::cout << "Rocket fuel weight: \n";
             std::cout << rocket->fuel_weight;
             std::cout << "\nTICK: ";
