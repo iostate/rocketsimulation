@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/qmtruong92/Code/arduinoprojects/rocket/lander.c
+lander.h
+/Users/qmtruong92/Code/arduinoprojects/rocket/lander.h
+stdio.h
+-
+math.h
+-
+stdlib.h
+-
+
+/Users/qmtruong92/Code/arduinoprojects/rocket/lander.h
+

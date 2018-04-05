@@ -71,20 +71,19 @@ extern double hover_range;
    slice.
    ------------------------------------------------------- */
 
-typedef struct
-{
-  double fuel_weight;      /* Fuel weight, kilograms      */
-  double acceleration;     /* Upward acceleration, m/s**2 */
-  double velocity;         /* Upward velocity, m/s        */
-  double altitude;         /* Altitude, meters            */
-  double prior_burn_rate;  /* Prior burn rate kg/s        */
+typedef struct {
+    double fuel_weight;      /* Fuel weight, kilograms      */
+    double acceleration;     /* Upward acceleration, m/s**2 */
+    double velocity;         /* Upward velocity, m/s        */
+    double altitude;         /* Altitude, meters            */
+    double prior_burn_rate;  /* Prior burn rate kg/s        */
 
-  int time;                /* Time, in tenths of a second */
-  int hover_count;         /* Turns at hover altitude     */
-  int hover_accomplished;  /* Flag: hover finished?       */
-                           /* 0 == no, !0 == yes          */
+    int time;                /* Time, in tenths of a second */
+    int hover_count;         /* Turns at hover altitude     */
+    int hover_accomplished;  /* Flag: hover finished?       */
+    /* 0 == no, !0 == yes          */
 
-  int run_state;           /* See run_* in this file      */
+    int run_state;           /* See run_* in this file      */
 } ship_state_type;
 
 extern double setBurnRate(ship_state_type ss);

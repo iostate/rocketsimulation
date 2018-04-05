@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/qmtruong92/Code/arduinoprojects/rocket/lander.h
+
+/Users/qmtruong92/Code/arduinoprojects/rocket/setburnrate.cpp
+stdint.h
+-
+lander.h
+/Users/qmtruong92/Code/arduinoprojects/rocket/lander.h
+math.h
+-
+
