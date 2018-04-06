@@ -32,33 +32,38 @@ int main() {
 
     while (rocket->time < 500) {
 
-        while (rocket->time < 2) {
+        while (rocket->time < 200) {
+            std::cout << "Current timer: " << rocket->time << std::endl;
             total_mass = ship_weight + rocket->fuel_weight;
-            std::cout << "Total mass: " << total_mass << std::endl;
-            force_one = total_mass * 110.0;
+            std::cout << "Total_Mass: \t" << total_mass << std::endl;
+            force_one = total_mass * 109.0;
             burn_rate = force_one / v_nozz;
-            std::cout << "Burn Rate: " << burn_rate << std::endl;
-            rocket->fuel_weight = (rocket->fuel_weight) - burn_rate * delta_t;
-            std::cout << "BURNED THIS AMOUNT OF FUEL: " << burn_rate * delta_t << std::endl;
+            rocket->fuel_weight = (rocket->fuel_weight)  - (burn_rate * delta_t);
+            std::cout << "Fuel weight: \t" << rocket->fuel_weight << std::endl;
             total_mass = ship_weight + rocket->fuel_weight;
+            std::cout << "New total mass: " << total_mass << std::endl << "\n";
             rocket->acceleration = (force_one / total_mass) - 10.0; /* in m/s^2*/
-            std::cout << "Rocket acceleration: " << rocket->acceleration << std::endl;
-            rocket->altitude = rocket->velocity * 0.1 + 0.5 * rocket->acceleration * (0.1 * 0.1);
-            std::cout << "Rocket altitude: " << rocket->altitude << std::endl;
+            rocket->altitude = (rocket->velocity * 0.1) + (0.5 * rocket->acceleration * (0.1 * 0.1));
             /* Do final velocity */
-            final_velocity = rocket->velocity + rocket->acceleration * 0.1;
-            std::cout << "Rocket Final Velocity: " << final_velocity << std::endl;
+            final_velocity = rocket->velocity + (rocket->acceleration * 0.1);
             /* Do the vi */
             rocket->velocity = final_velocity;
+
+     /*       std::cout << "Total mass: " << total_mass << std::endl;
+            std::cout << "Burn Rate: " << burn_rate << std::endl;
+            std::cout << "BURNED THIS AMOUNT OF FUEL: " << burn_rate * delta_t << std::endl;
+            std::cout << "Rocket acceleration: " << rocket->acceleration << std::endl;
+            std::cout << "Rocket altitude: " << rocket->altitude << std::endl;
+            std::cout << "Rocket Final Velocity: " << final_velocity << std::endl;
             std::cout << "Rocket Initial Velocity: " << rocket->velocity << std::endl;
             std::cout << "Rocket fuel weight: \n";
             std::cout << rocket->fuel_weight;
             std::cout << "\nTICK: ";
             std::cout << rocket->time;
-            std::cout << "\n";
+            std::cout << "\n";*/
             // loop shit
             /*setBurnRate(*rocket);*/
-            sleep((unsigned int)0.1);
+            /*sleep((unsigned int)0.1);*/
             rocket->time += 1;
         }
       /*  std::cout << "Out of burn phase: \n";*/

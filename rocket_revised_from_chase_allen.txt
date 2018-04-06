@@ -1,0 +1,91 @@
+This is just pseudo code
+
+define variables
+
+mr = mass of rocket (in kg variable input)
+mf = mass of fuel (in kg fixed 1000kg at first then varies)
+mt = total mass = mr + mf
+br = burn rate
+final height = input of final height (in m variable)
+hf = our final target height <----------------- set this to final height + range so our final target height is the top of range
+hi = current height
+h' = delta h = hf - hi
+F1 = force of fuel posing rocket (in N)
+F2 = force of fuel posing rocket (in N)
+Vnozz = Nozzle velocity (in m/s fixed 2000m/s)
+a = acceleration (in m/s^2)
+vf = final velo. (in m/s)
+vi = initial velo. (in m/s) // set vi to zero at start
+v' = change in velo (in m/s)
+r = range (in m variable)
+rt = range top (in m variable) <------- rt = final height + range
+rb = range bottom (in m variable) <------- rb = final height - range
+T = our set time (in s)
+
+
+while t < 0.5 and flag = 0 (take off function)
+
+	mt = mr + mf
+	F1 = mt * 109 	// 109 here is max accel. and so we don't go over 100 by decimal places
+	br = F1/Vnozz
+	mf = mf - br * 0.1 	// 0.1 is the time slice
+	mt = mr + mf 		// need to recalculate for next equation
+	a = (F1 / mt) - 10	
+	hi = vi * 0.1 + 0.5 * a * 0.1 * 0.1
+	vf = vi + a * 0.1
+	vi = vf
+	h' = hf - hi
+	
+loop every 0.1 while flag = 0 (main function for flying to target) 
+
+	mt = mr + mf
+	F2 = (vi^2 * mt) / (2 h')
+	F1 = mt * 109
+	
+	if F1 < F2
+		br = F1 / Vnozz // this is a check to make sure we don't exceed max accel.
+
+	else
+		br = F2 / Vnozz
+
+	mf = mf - br * 0.1 	
+	mt = mr + mf 		
+	a = (F1 / mt) - 10
+	hi = vi * 0.1 + 0.5 * a * 0.1 * 0.1
+	vf = vi + a * 0.1
+	vi = vf
+	h' = hf - hi
+
+	if hi = hf
+		flag = 1
+	
+while flag = 1 (maybe a for loop here to increment our own time?) (Hover Function)
+
+	
+	while  hi = rb
+		
+		h' = rt - rb
+		vf = sqrt(2 * 10 * h')	// This is calc finds final velo from falling from rt to rb 
+		F2 = (vf^2 * mt) / (2 * h')
+		F1 = mt * 109
+	
+		if F1 < F2
+			br = F1 / Vnozz 	// this is a check to make sure we don't exceed max accel.
+	
+		else
+			br = F2 / Vnozz
+	
+		mf = mf - br * 0.1 	
+		mt = mr + mf 		
+		a = (F1 / mt) - 10
+		hi = vi * 0.1 + 0.5 * a * 0.1 * 0.1
+		vf = vi + a * 0.1
+		vi = vf
+		T = T + 0.1			// T needs to be initialized to zero before all loops 
+		
+		if T = 5
+			flag = 2
+
+while flag = 2 (Landing Function)
+
+	
