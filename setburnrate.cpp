@@ -68,7 +68,10 @@ int main() {
 
     return 0;
 }*/
-double mass_rocket = ship_weight; /* Measured in kgs */
+
+/*Set the shipweight explicitly since we can't acces the .ino file*/
+double explicit_ship_weight = 534.0;
+double mass_rocket = explicit_ship_weight; /* Measured in kgs */
 double mass_fuel = 1000.0; /* Measured in kgs */
 /* double mass_total = mass_rocket + mass_fuel;  Measured in kgs */
 double mass_total = mass_rocket + mass_fuel;
@@ -93,13 +96,35 @@ double T = 0.0;
 double height_cutoff = target_height - 200;
 double velocity_max = sqrt(2000);
 
-double take_off(double time) {
+double take_off() {
     double change_in_altitude = 0.0;
     force_1 = mass_total * 109;
     burn_rate = force_1 / nozzle_velocity;
 
+    /* Update the following:
+     * 1. Total mass
+     * 2. Acceleration
+     * 3. Altitude
+     * 4. Final velocity
+     * 5. Initial Velocity
+     * 6. Change in altitude
+     * */
+    mass_total = mass_total - (burn_rate * 0.1);
+    acceleration = (force_1 / mass_total) - 10;
+    altitude = altitude + (initial_velocity * 0.1) + (0.5 * acceleration * 0.1 * 0.1);
+    final_velocity = initial_velocity + (acceleration * 0.1);
+    initial_velocity = final_velocity;
+    change_in_altitude = height_cutoff - altitude;
 
-    return change_in_altitude;
+    /* Increase the time slice*/
+    T += 0.1;
+
+    return burn_rate;
+}
+
+double take_us_to_goal() {
+
+
 }
 
 /*
@@ -121,13 +146,17 @@ double calculate_change_in_velocity(double the_initial_velocity_at_beginning_of_
 
 
 double setBurnRate(ship_state_type ss) {
+   double ze_burn_rate = 0.0;
+    if (T < 0.5){
+        ze_burn_rate = take_off();
+    } else if ((altitude < height_cutoff) && (T>= 0.5)) {
+        ze_burn_rate = take_us_to_goal();
+    }
 
-
-    return 0;
+    return ze_burn_rate;
 }
 
 int main() {
 
-    std::cout << velocity_max;
     return 0;
 }
