@@ -5,70 +5,6 @@
 /*TODO:
  * 1. Can declare anything within this file needed */
 
-
-/* Declare extern method for the assembly language function*/
-/*
-int main() {
-    ship_state_type *rocket = new ship_state_type;
-    rocket->fuel_weight = 1000.0;
-    rocket->acceleration = 0.0; *//* Initial acceleration = 0 *//*
-    rocket->velocity = 0.0; *//* Initial velocity = 0 *//*
-    rocket->altitude = 0.0; *//* Initial altitude = 0 *//*
-    rocket->prior_burn_rate = 0.0; *//* Initial prior burn rate  = 0 *//*
-
-    rocket->time = 0.0; *//* Initial time in air  = 0*//*
-    rocket->hover_count = 0.0; *//* Initial hover count = 0 *//*
-    rocket->hover_accomplished = 0; *//* Initial hover accomplished = 0 *//*
-
-
-
-    *//* Call setBurnRate every 100 milliseconds *//*
-
-    while (rocket->time < 500) {
-
-        while (rocket->time < 200) {
-            std::cout << "Current timer: " << rocket->time << std::endl;
-            total_mass = ship_weight + rocket->fuel_weight;
-            std::cout << "Total_Mass: \t" << total_mass << std::endl;
-            force_one = total_mass * 109.0;
-            burn_rate = force_one / v_nozz;
-            rocket->fuel_weight = (rocket->fuel_weight)  - (burn_rate * delta_t);
-            std::cout << "Fuel weight: \t" << rocket->fuel_weight << std::endl;
-            total_mass = ship_weight + rocket->fuel_weight;
-            std::cout << "New total mass: " << total_mass << std::endl << "\n";
-            rocket->acceleration = (force_one / total_mass) - 10.0; *//* in m/s^2*//*
-            rocket->altitude = (rocket->velocity * 0.1) + (0.5 * rocket->acceleration * (0.1 * 0.1));
-            *//* Do final velocity *//*
-            final_velocity = rocket->velocity + (rocket->acceleration * 0.1);
-            *//* Do the vi *//*
-            rocket->velocity = final_velocity;
-
-     *//*       std::cout << "Total mass: " << total_mass << std::endl;
-            std::cout << "Burn Rate: " << burn_rate << std::endl;
-            std::cout << "BURNED THIS AMOUNT OF FUEL: " << burn_rate * delta_t << std::endl;
-            std::cout << "Rocket acceleration: " << rocket->acceleration << std::endl;
-            std::cout << "Rocket altitude: " << rocket->altitude << std::endl;
-            std::cout << "Rocket Final Velocity: " << final_velocity << std::endl;
-            std::cout << "Rocket Initial Velocity: " << rocket->velocity << std::endl;
-            std::cout << "Rocket fuel weight: \n";
-            std::cout << rocket->fuel_weight;
-            std::cout << "\nTICK: ";
-            std::cout << rocket->time;
-            std::cout << "\n";*//*
-            // loop shit
-            *//*setBurnRate(*rocket);*//*
-            *//*sleep((unsigned int)0.1);*//*
-            rocket->time += 1;
-        }
-      *//*  std::cout << "Out of burn phase: \n";*//*
-        setBurnRate(*rocket);
-        sleep((unsigned int)0.1);
-        rocket->time += 1;
-    }
-
-    return 0;
-}*/
-
 /*Set the shipweight explicitly since we can't acces the .ino file*/
 double explicit_ship_weight = 534.0;
 double mass_rocket = explicit_ship_weight; /* Measured in kgs */
@@ -94,10 +30,9 @@ double bottom_of_range = final_height - range;
 double target_height = bottom_of_range + range;
 double T = 0.0;
 double height_cutoff = target_height - 200;
-double velocity_max = sqrt(2000);
+double velocity_max = sqrt(40000);
 
 double take_off() {
-    double change_in_altitude = 0.0;
     force_1 = mass_total * 109;
     burn_rate = force_1 / nozzle_velocity;
 
@@ -114,7 +49,7 @@ double take_off() {
     altitude = altitude + (initial_velocity * 0.1) + (0.5 * acceleration * 0.1 * 0.1);
     final_velocity = initial_velocity + (acceleration * 0.1);
     initial_velocity = final_velocity;
-    change_in_altitude = height_cutoff - altitude;
+    change_in_altitude_since_last_time_slice = height_cutoff - altitude;
 
     /* Increase the time slice*/
     T += 0.1;
@@ -123,8 +58,97 @@ double take_off() {
 }
 
 double take_us_to_goal() {
+    if (initial_velocity >= velocity_max) {
+        force_2 = 0.0;
+    } else {
+        force_2 = (((velocity_max * velocity_max) - (initial_velocity * initial_velocity)) * mass_total) /
+                ( 2.0 * change_in_altitude_since_last_time_slice);
+        force_1 = mass_total * 109;
+    }
+
+    if (force_1 < force_2) {
+        burn_rate = (force_1 / nozzle_velocity);
+        mass_total = mass_total - (burn_rate * 0.1);
+        acceleration = (force_1 / mass_total) - 10;
+    } else {
+        burn_rate = force_2 / nozzle_velocity;
+        mass_total = mass_total - (burn_rate * 0.1);
+        acceleration = (force_2 / mass_total) - 10;
+    }
+
+    altitude = altitude + (initial_velocity * 0.1) + (0.5 * acceleration * 0.1 * 0.1);
+    final_velocity = initial_velocity + (acceleration * 0.1);
+    initial_velocity = final_velocity;
+    change_in_altitude_since_last_time_slice = height_cutoff - altitude;
 
 
+    /*The following code cannot be implemented because we cannot change the ship_state:
+     * if altitude = hf
+		ship_state = 2
+     */
+    /* Can't change the ship_state*/
+
+    return burn_rate;
+}
+
+double hover(ship_state_type ship) {
+    while (ship.run_state == 2) {
+        while (altitude >= bottom_of_range && altitude <= top_of_range) {
+            change_in_altitude_since_last_time_slice = top_of_range - bottom_of_range;
+            final_velocity = sqrt(2.0 * 10.0 * change_in_altitude_since_last_time_slice);
+            force_2 = (final_velocity * final_velocity * mass_total) / (2.0 * change_in_altitude_since_last_time_slice);
+            force_1 = mass_total * 109;
+            if (force_1 < force_2) {
+                burn_rate = force_1 / nozzle_velocity;
+                mass_total = mass_total - (burn_rate * 0.1);
+                acceleration = (force_1 / mass_total) - 10;
+            } else {
+                burn_rate = force_2 / nozzle_velocity;
+                mass_total = mass_total - (burn_rate * 0.1);
+                acceleration = (force_2 / mass_total) - 10;
+            }
+            altitude = altitude + (initial_velocity * 0.1) + (0.5 * acceleration * 0.1 * 0.1);
+
+            final_velocity = initial_velocity + (acceleration * 0.1);
+            initial_velocity = final_velocity;
+            T += 0.1;
+
+            /*Cannot implement
+             * if (T == 5) {
+             *  ss.ship_state = 3;
+             * }*/
+        }
+    }
+
+    return burn_rate;
+}
+
+double landing(ship_state_type ship) {
+    while (ship.run_state == 3) {
+        altitude = altitude + (initial_velocity * 0.1) + (0.5 * (-10.0) * 0.1 * 0.1);
+        final_velocity = initial_velocity + (-10.0 * 0.1);
+        initial_velocity = final_velocity;
+
+        if (altitude == 100) {
+            force_2 = (((-3.0 * -3.0) - (initial_velocity * initial_velocity) * mass_total) / (2.0 * altitude));
+            force_1 = mass_total * 109;
+
+            if (force_1 > force_2) {
+                burn_rate = (force_1 / nozzle_velocity);
+                mass_total = mass_total - (burn_rate * 0.1);
+                acceleration = (force_1 / mass_total) - 10.0;
+            } else {
+                burn_rate = (force_2 / nozzle_velocity);
+                mass_total = mass_total - (burn_rate * 0.1);
+                acceleration = (force_2 / mass_total) - 10.0;
+            }
+            altitude = altitude + (initial_velocity * 0.1) + (0.5 * acceleration * 0.1 * 0.1);
+            final_velocity = initial_velocity + (acceleration * 0.1);
+            initial_velocity = final_velocity;
+        }
+
+    }
+    return burn_rate;
 }
 
 /*
@@ -147,7 +171,7 @@ double calculate_change_in_velocity(double the_initial_velocity_at_beginning_of_
 
 double setBurnRate(ship_state_type ss) {
    double ze_burn_rate = 0.0;
-    if (T < 0.5){
+    if (T < 0.5 && ss.run_state == 1){
         ze_burn_rate = take_off();
     } else if ((altitude < height_cutoff) && (T>= 0.5)) {
         ze_burn_rate = take_us_to_goal();
