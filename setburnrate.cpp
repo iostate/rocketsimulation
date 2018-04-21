@@ -2,11 +2,19 @@
 #include <stdint.h>
 #include<math.h>
 
-/*TODO:
- * 1. Are we keeping track of the fuel weight?
- * 2. Most things are being kept track of in lander.ino, don't overcomplicate the work
- * by wanting to keep track of all the variables yourself. */
-
+/**
+ * BRANCH: upg_challencode
+ *
+ * Plans:
+ * 1. Updating the end of all functions to include T1 += 1. Assuming T1 is the time slice.
+ *
+ * Questions:
+ * 1. What do the T1, T2, and flag variables represent?
+ *
+ * Problems:
+ * 1. Acceleration peaks at time slice #1 w/ value of 61 ,
+ * decreases thereafter, and becomes a negative number shortly after.
+ */
 /*Set the shipweight explicitly since we can't acces the .ino file*/
 
 double mass_rocket = ship_weight; /* Measured in kgs */
@@ -32,7 +40,7 @@ double bottom_of_range = final_height - range;
 double target_height = top_of_range;
 double height_cutoff = target_height - 200;
 double velocity_max = sqrt(4000);
-double time_slice = 1;
+const double TIME_SLICE = 1;
 double the_gravity = 10.0;
 
 
@@ -45,6 +53,8 @@ double the_gravity = 10.0;
  * Numbers assigned to flag throughout program: 0 (initialization), 2, 3
  */
 int flag = 0;
+/* Most likely time keeper.
+ * TIME_SLICE should NOT be modified*/
 double T1 = 0;
 double T2 = 0;
 // access altitude from ship w/o passing in ship as variable
@@ -63,12 +73,12 @@ double take_off()
      * 5. Initial Velocity
      * 6. Change in altitude
      * */
-    mass_total = mass_total - (burn_rate * time_slice);
+    mass_total = mass_total - (burn_rate * TIME_SLICE);
     acceleration = (force_1 / mass_total) - 10;
-    altitude = altitude + (initial_velocity * time_slice) + (0.5 * acceleration * time_slice * time_slice);
-    final_velocity = initial_velocity + (acceleration * time_slice);
+    altitude = altitude + (initial_velocity * TIME_SLICE) + (0.5 * acceleration * TIME_SLICE * TIME_SLICE);
+    final_velocity = initial_velocity + (acceleration * TIME_SLICE);
     initial_velocity = final_velocity;
-    change_in_altitude_since_last_time_slice = height_cutoff - altitude;
+    change_in_altitude_since_last_TIME_SLICE = height_cutoff - altitude;
     T1 += 1;
 
     return burn_rate;
@@ -84,26 +94,28 @@ double take_us_to_goal()
     else 
     {
         force_2 = (((velocity_max * velocity_max) - (initial_velocity * initial_velocity)) * mass_total) /
-                ( 2.0 * change_in_altitude_since_last_time_slice);
+                ( 2.0 * change_in_altitude_since_last_TIME_SLICE);
         force_1 = mass_total * 109;
     }
 
-    // this is wrong .. since burn 2 cant go less than 0
-    // make sure we don't go faster than we are capable
-    if (force_1 < force_2) {
+    /**
+     * Known issue here.
+     * Changed smaller than symbol (<) for greater than symbol (>)
+     */
+    if (force_1 > force_2) {
         burn_rate = (force_1 / nozzle_velocity);
-        mass_total = mass_total - (burn_rate * time_slice);
+        mass_total = mass_total - (burn_rate * TIME_SLICE);
         acceleration = (force_1 / mass_total) - the_gravity;
     } else {
         burn_rate = force_2 / nozzle_velocity;
-        mass_total = mass_total - (burn_rate * time_slice);
+        mass_total = mass_total - (burn_rate * TIME_SLICE);
         acceleration = (force_2 / mass_total) - the_gravity;
     }
 
-    altitude = altitude + (initial_velocity * time_slice) + (0.5 * acceleration * time_slice * time_slice);
-    final_velocity = initial_velocity + (acceleration * time_slice);
+    altitude = altitude + (initial_velocity * TIME_SLICE) + (0.5 * acceleration * TIME_SLICE * TIME_SLICE);
+    final_velocity = initial_velocity + (acceleration * TIME_SLICE);
     initial_velocity = final_velocity;
-    change_in_altitude_since_last_time_slice = height_cutoff - altitude;
+    change_in_altitude_since_last_TIME_SLICE = height_cutoff - altitude;
 
 
     /**
@@ -115,6 +127,7 @@ double take_us_to_goal()
         flag = 2;
     }
 
+    T1 += 1;
 
 
     return burn_rate;
@@ -134,22 +147,22 @@ double hover() {
  //     double T2 = 0.0; // Time I initialized up top
   
       while (altitude == bottom_of_range) {
-            change_in_altitude_since_last_time_slice = top_of_range - bottom_of_range;
-            final_velocity = sqrt(2.0 * the_gravity * change_in_altitude_since_last_time_slice);
-            force_2 = (final_velocity * final_velocity * mass_total) / (2.0 * change_in_altitude_since_last_time_slice);
+            change_in_altitude_since_last_TIME_SLICE = top_of_range - bottom_of_range;
+            final_velocity = sqrt(2.0 * the_gravity * change_in_altitude_since_last_TIME_SLICE);
+            force_2 = (final_velocity * final_velocity * mass_total) / (2.0 * change_in_altitude_since_last_TIME_SLICE);
             force_1 = mass_total * 109;
             if (force_1 < force_2) {
                 burn_rate = force_1 / nozzle_velocity;
-                mass_total = mass_total - (burn_rate * time_slice);
+                mass_total = mass_total - (burn_rate * TIME_SLICE);
                 acceleration = (force_1 / mass_total) - 10;
             } else {
                 burn_rate = force_2 / nozzle_velocity;
-                mass_total = mass_total - (burn_rate * time_slice);
+                mass_total = mass_total - (burn_rate * TIME_SLICE);
                 acceleration = (force_2 / mass_total) - 10;
             }
-            altitude = altitude + (initial_velocity * time_slice) + (0.5 * acceleration * time_slice * time_slice);
+            altitude = altitude + (initial_velocity * TIME_SLICE) + (0.5 * acceleration * TIME_SLICE * TIME_SLICE);
 
-            final_velocity = initial_velocity + (acceleration * time_slice);
+            final_velocity = initial_velocity + (acceleration * TIME_SLICE);
             initial_velocity = final_velocity;
 
             
@@ -165,8 +178,8 @@ double hover() {
 
 double landing() {
     while (flag == 3) {
-        altitude = altitude + (initial_velocity * time_slice) + (0.5 * (-the_gravity) * time_slice * time_slice);
-        final_velocity = initial_velocity + (-the_gravity * time_slice);
+        altitude = altitude + (initial_velocity * TIME_SLICE) + (0.5 * (-the_gravity) * TIME_SLICE * TIME_SLICE);
+        final_velocity = initial_velocity + (-the_gravity * TIME_SLICE);
         initial_velocity = final_velocity;
 
         if (altitude > 100 && altitude < 200) {
@@ -175,15 +188,15 @@ double landing() {
 
             if (force_1 > force_2) {
                 burn_rate = (force_1 / nozzle_velocity);
-                mass_total = mass_total - (burn_rate * time_slice);
+                mass_total = mass_total - (burn_rate * TIME_SLICE);
                 acceleration = (force_1 / mass_total) - the_gravity;
             } else {
                 burn_rate = (force_2 / nozzle_velocity);
-                mass_total = mass_total - (burn_rate * time_slice);
+                mass_total = mass_total - (burn_rate * TIME_SLICE);
                 acceleration = (force_2 / mass_total) - the_gravity;
             }
-            altitude = altitude + (initial_velocity * time_slice) + (0.5 * acceleration * time_slice * time_slice);
-            final_velocity = initial_velocity + (acceleration * time_slice);
+            altitude = altitude + (initial_velocity * TIME_SLICE) + (0.5 * acceleration * TIME_SLICE * TIME_SLICE);
+            final_velocity = initial_velocity + (acceleration * TIME_SLICE);
             initial_velocity = final_velocity;
         }
 
@@ -195,16 +208,21 @@ double landing() {
  * Use a stack initialized within this stack that pushes the initial altitude onto it, and
  * then pops it into the parameter of this function along with the final_height in order to return the change
  * in altitude
- * double calculate_change_in_altitude(double initial_altitude_at_beginning_of_time_slice, double final_height) {
+ * double calculate_change_in_altitude(double initial_altitude_at_beginning_of_TIME_SLICE, double final_height) {
  *
- *  return final_height - initial_altitude_at_beginning_of_time_slice;
+ *  return final_height - initial_altitude_at_beginning_of_TIME_SLICE;
  * }
  * */
 
 
-
-double calculate_change_in_velocity(double the_initial_velocity_at_beginning_of_time_slice, double the_final_velocity) {
-    return the_final_velocity - the_initial_velocity_at_beginning_of_time_slice;
+/**
+ * Never gets used. Consider deleting.
+ * @param the_initial_velocity_at_beginning_of_TIME_SLICE
+ * @param the_final_velocity
+ * @return
+ */
+double calculate_change_in_velocity(double the_initial_velocity_at_beginning_of_TIME_SLICE, double the_final_velocity) {
+    return the_final_velocity - the_initial_velocity_at_beginning_of_TIME_SLICE;
 }
 
 double setBurnRate(ship_state_type ss) {
