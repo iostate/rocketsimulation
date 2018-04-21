@@ -36,7 +36,7 @@
 #define gravity              ((double)10.0)
 #define max_acceleration     ((double)100.0)
 #define min_launch_time      ((int)20)
-#define max_time_per_turn    ((time_t)3)
+#define max_time_per_turn    ((time_t)3000000)
 #define delta_t              ((double)0.1)
 #define initial_fuel_weight  ((double)1000.0)
 #define max_landing_velocity ((double)-3.0)

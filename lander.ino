@@ -274,6 +274,7 @@ void update(ship_state_type *ss)
    higher bonus if the landing velocity is positive.
 */
 
+
 double calcScore(ship_state_type *ss)
 {
   if((ss->run_state != run_landed ) ||
