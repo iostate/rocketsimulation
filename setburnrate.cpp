@@ -32,12 +32,11 @@ double flag = 0;
 double T1 = 0;
 double T2 = 0;
 
- 
+
 // access altitude from ship w/o passing in ship as variable
 // try and access it with global access
 
-double take_off(double mass_total, double height_cutoff) 
-{
+double take_off(double mass_total, double height_cutoff) {
     force_1 = mass_total * 109;
     burn_rate = force_1 / nozzle_velocity;
 
@@ -49,32 +48,36 @@ double take_off(double mass_total, double height_cutoff)
      * 5. Initial Velocity
      * 6. Change in altitude
      * */
-    acceleration = (force_1 / mass_total) - 10;
+    acceleration = (force_1 / mass_total) - the_gravity;
     mass_total = mass_total - (burn_rate * time_slice);
     altitude = altitude + (initial_velocity * time_slice) + (0.5 * acceleration * time_slice * time_slice);
     final_velocity = initial_velocity + (acceleration * time_slice);
     initial_velocity = final_velocity;
     change_in_altitude_since_last_time_slice = height_cutoff - altitude;
     T1 += 1;
-    mass_fuel = mass_fuel - (burn_rate*time_slice);
+    mass_fuel = mass_fuel - (burn_rate * time_slice);
 
     return burn_rate;
 }
 
-double take_us_to_goal(double mass_total, double height_cutoff, double top_of_range) 
-{
-    if (initial_velocity >= velocity_max) 
-    {
+double take_us_to_goal(double mass_total, double height_cutoff, double top_of_range) {
+
+    if (initial_velocity >= velocity_max) {
         force_2 = 0.0;
-    } 
-    else 
-    {
+    } else {
         force_2 = (((velocity_max * velocity_max) - (initial_velocity * initial_velocity)) * mass_total) /
-                ( 2.0 * change_in_altitude_since_last_time_slice);
+                  (2.0 * change_in_altitude_since_last_time_slice);
         force_1 = mass_total * 109;
     }
 
-    // make sure we don't go faster than we are capable
+    // Following conditionals ensure that we don't go faster than we
+    // are capable of.
+
+    /**
+     * TODO: Acceleration drops to 0 after the take_off().
+     * If we assume that the take_us_to_goal() gets executed next, the acceleration problem should lie within
+     * these two conditional statements.
+     */
     if (force_1 < force_2) {
         burn_rate = (force_1 / nozzle_velocity);
         mass_total = mass_total - (burn_rate * time_slice);
@@ -89,11 +92,9 @@ double take_us_to_goal(double mass_total, double height_cutoff, double top_of_ra
     final_velocity = initial_velocity + (acceleration * time_slice);
     initial_velocity = final_velocity;
     change_in_altitude_since_last_time_slice = height_cutoff - altitude;
-    mass_fuel = mass_fuel - (burn_rate*time_slice);
+    mass_fuel = mass_fuel - (burn_rate * time_slice);
 
-
-    
-    if (altitude >= top_of_range){
+    if (altitude >= top_of_range) {
         flag = 2;
     }
 
@@ -101,10 +102,10 @@ double take_us_to_goal(double mass_total, double height_cutoff, double top_of_ra
 }
 
 double hover(double mass_total, double top_of_range, double bottom_of_range) {
-  while (flag == 2) {
- //     double T2 = 0.0; // Time I initialized up top
+    while (flag == 2) {
+        //     double T2 = 0.0; // Time I initialized up top
 
-      while (altitude == bottom_of_range) {
+        while (altitude == bottom_of_range) {
             change_in_altitude_since_last_time_slice = top_of_range - bottom_of_range;
             final_velocity = sqrt(2.0 * the_gravity * change_in_altitude_since_last_time_slice);
             force_2 = (final_velocity * final_velocity * mass_total) / (2.0 * change_in_altitude_since_last_time_slice);
@@ -123,14 +124,14 @@ double hover(double mass_total, double top_of_range, double bottom_of_range) {
             final_velocity = initial_velocity + (acceleration * time_slice);
             initial_velocity = final_velocity;
 
-            
-             if (T1 == 5) {
-                 flag = 3;
-             }
+
+            if (T1 == 5) {
+                flag = 3;
+            }
         }
 
         T2 += 1;
-  }
+    }
     return burn_rate;
 }
 
@@ -171,33 +172,30 @@ double landing(double mass_total) {
  *  return final_height - initial_altitude_at_beginning_of_time_slice;
  * }
  * */
-
-
-
 double calculate_change_in_velocity(double the_initial_velocity_at_beginning_of_time_slice, double the_final_velocity) {
     return the_final_velocity - the_initial_velocity_at_beginning_of_time_slice;
 }
 
 double setBurnRate(ship_state_type ss) {
-   double ze_burn_rate = 0.0;
-   double mass_rocket = ship_weight;
-   double mass_total;
-   double top_of_range = hover_altitude + hover_range;
-   double bottom_of_range = hover_altitude - hover_range;
-   double target_height = top_of_range;
-   double height_cutoff = target_height - 200;
-   
-   mass_total = mass_rocket + mass_fuel;
-  // blast off for 5 seconds
-  if (T1 < 5) {
+    double ze_burn_rate = 0.0;
+    double mass_rocket = ship_weight;
+    double mass_total;
+    double top_of_range = hover_altitude + hover_range;
+    double bottom_of_range = hover_altitude - hover_range;
+    double target_height = top_of_range;
+    double height_cutoff = target_height - 200;
+
+    mass_total = mass_rocket + mass_fuel;
+    // blast off for 5 seconds
+    if (T1 < 5) {
         ze_burn_rate = take_off(mass_total, height_cutoff);
-  } else if (T1 >= 6) {
+    } else if (T1 >= 6) {
         ze_burn_rate = take_us_to_goal(mass_total, height_cutoff, top_of_range);
-  }  else if (T1 >= 5 && flag == 2) {
+    } else if (T1 >= 5 && flag == 2) {
         ze_burn_rate = hover(mass_total, top_of_range, bottom_of_range);
-  } else if(T1 >= 5 && flag == 3){
+    } else if (T1 >= 5 && flag == 3) {
         ze_burn_rate = landing(mass_total);
-  }
+    }
     return ze_burn_rate;
 }
 
